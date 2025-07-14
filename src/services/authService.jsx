@@ -9,17 +9,23 @@ export async function loginEmpresa(nombre, password) {
         });
 
         if (!res.ok) {
-            // Puedes manejar errores específicos aquí, si quieres
             return null;
         }
 
         const data = await res.json();
-        return data.empresa; // retorna datos de la empresa o null
+
+        if (data.empresa) {
+            // Guardar en localStorage
+            localStorage.setItem('empresa', JSON.stringify(data.empresa));
+        }
+
+        return data.empresa;
     } catch (error) {
         console.error('Error en loginEmpresa:', error);
         return null;
     }
 }
+
 
 export async function registerEmpresa(formData) {
     try {
