@@ -3,7 +3,7 @@ import LoginEmpresa from '../pages/LoginEmpresa';
 import Register from '../pages/Register';
 import DashboardEmpresa from '../pages/DashboardEmpresa';
 import Home from '../pages/Home';
-import Inventario from '../pages/Inventario';
+import Inventario from '../pages/Inventario/Inventario';
 import Reportes from '../pages/Reportes';
 import Empleados from '../pages/Empleados';
 import Clientes from '../pages/Clientes';
