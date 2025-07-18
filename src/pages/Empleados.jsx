@@ -10,7 +10,6 @@ export default function Empleados() {
         name: "",
         email: "",
         password: "",
-        empresa_name: "",
     });
     const [errores, setErrores] = useState({});
     const [modoEdicion, setModoEdicion] = useState(false);
@@ -23,8 +22,6 @@ export default function Empleados() {
         }
         const empresaObj = JSON.parse(empresaStr);
         setEmpresa({ id: empresaObj.id, nombre: empresaObj.nombre || empresaObj.name });
-        setFormulario((prev) => ({ ...prev, empresa_name: empresaObj.nombre || empresaObj.name }));
-
         obtenerEmpleados(empresaObj.id);
     }, []);
 
@@ -44,6 +41,7 @@ export default function Empleados() {
         setFormulario((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Esta función valida el formulario y actualiza errores
     const validarFormulario = () => {
         const nuevosErrores = {};
         if (!formulario.name) nuevosErrores.name = "El nombre es obligatorio.";
@@ -51,67 +49,66 @@ export default function Empleados() {
         else if (!/\S+@\S+\.\S+/.test(formulario.email)) nuevosErrores.email = "El correo no es válido.";
         if (!modoEdicion && !formulario.password) nuevosErrores.password = "La contraseña es obligatoria.";
         else if (!modoEdicion && formulario.password.length < 6) nuevosErrores.password = "La contraseña debe tener al menos 6 caracteres.";
+
         setErrores(nuevosErrores);
         return Object.keys(nuevosErrores).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
+        setErrores({});
+
         if (!validarFormulario()) return;
 
+        const url = modoEdicion
+            ? `http://127.0.0.1:8000/api/empleados/${formulario.id}`
+            : "http://127.0.0.1:8000/api/register";
+
+        const method = modoEdicion ? "PUT" : "POST";
+
+        const bodyData = {
+            name: formulario.name,
+            email: formulario.email,
+            ...(formulario.password && { password: formulario.password }),
+            empresa_id: empresa.id,
+        };
+
         try {
-            const url = modoEdicion
-                ? `http://127.0.0.1:8000/api/empleados/${formulario.id}`
-                : "http://127.0.0.1:8000/api/register";
-
-            const method = modoEdicion ? "PUT" : "POST";
-
-            // En modo edición, si password está vacío, no lo mandamos para no cambiarlo
-            const bodyData = { ...formulario };
-            if (modoEdicion && !formulario.password) delete bodyData.password;
-
             const response = await fetch(url, {
                 method,
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify(bodyData),
             });
 
             const result = await response.json();
 
             if (!response.ok) {
-                if (result.errors) {
-                    setErrores(result.errors);
-                } else {
-                    setError(result.message || "Error desconocido.");
-                }
+                setErrores(result.errors || {});
+                setError(result.message || "Error al guardar.");
                 return;
             }
 
+            const nuevoEmpleado = result.empleado || result.data?.empleado || result.user;
+
             if (modoEdicion) {
-                // Actualizar la lista reemplazando el empleado editado
                 setEmpleados((prev) =>
-                    prev.map((emp) => (emp.id === result.data.id ? result.data : emp))
+                    prev.map((emp) => (emp.id === nuevoEmpleado.id ? nuevoEmpleado : emp))
                 );
             } else {
-                // Agregar nuevo empleado a la lista
-                setEmpleados((prev) => [...prev, result.data]);
+                setEmpleados((prev) => [...prev, nuevoEmpleado]);
             }
 
-            setMostrarModal(false);
-            setFormulario({
-                id: null,
-                name: "",
-                email: "",
-                password: "",
-                empresa_name: empresa.nombre,
-            });
-            setErrores({});
-            setError(null);
+            setFormulario({ id: null, name: "", email: "", password: "" });
             setModoEdicion(false);
+            setMostrarModal(false);
         } catch (err) {
-            setError("Error de conexión al servidor.");
+            setError("Error de red o del servidor.");
         }
     };
+
 
     const handleEliminar = async (id) => {
         if (!window.confirm("¿Estás seguro de eliminar este empleado?")) return;
@@ -132,8 +129,7 @@ export default function Empleados() {
             id: empleado.id,
             name: empleado.name,
             email: empleado.email,
-            password: "", // vaciar contraseña para que no se cambie a menos que el usuario ingrese algo nuevo
-            empresa_name: empresa.nombre,
+            password: "", // vaciar para no cambiar a menos que ingrese nuevo valor
         });
         setErrores({});
         setError(null);
@@ -148,13 +144,7 @@ export default function Empleados() {
                     <button
                         onClick={() => {
                             setModoEdicion(false);
-                            setFormulario({
-                                id: null,
-                                name: "",
-                                email: "",
-                                password: "",
-                                empresa_name: empresa.nombre,
-                            });
+                            setFormulario({ id: null, name: "", email: "", password: "" });
                             setErrores({});
                             setError(null);
                             setMostrarModal(true);
@@ -181,7 +171,10 @@ export default function Empleados() {
                         </thead>
                         <tbody>
                             {empleados.map((empleado) => (
-                                <tr key={empleado.id} className="border-b hover:bg-gray-50 text-gray-700">
+                                <tr
+                                    key={empleado.id}
+                                    className="border-b hover:bg-gray-50 text-gray-700"
+                                >
                                     <td className="p-3">{empleado.id}</td>
                                     <td className="p-3">{empleado.name}</td>
                                     <td className="p-3">{empleado.email}</td>
@@ -206,7 +199,6 @@ export default function Empleados() {
                 )}
             </div>
 
-            {/* Modal para agregar/editar empleado */}
             {mostrarModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
@@ -215,17 +207,20 @@ export default function Empleados() {
                         </h2>
                         <form onSubmit={handleSubmit}>
                             <div className="mb-3">
-                                <label className="block text-sm font-medium text-gray-700">Empresa:</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Empresa:
+                                </label>
                                 <input
                                     type="text"
-                                    name="empresa_name"
-                                    value={formulario.empresa_name}
+                                    value={empresa.nombre}
                                     disabled
                                     className="mt-1 w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
                                 />
                             </div>
                             <div className="mb-3">
-                                <label className="block text-sm font-medium text-gray-700">Nombre:</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Nombre:
+                                </label>
                                 <input
                                     type="text"
                                     name="name"
@@ -233,10 +228,14 @@ export default function Empleados() {
                                     onChange={handleInputChange}
                                     className="mt-1 w-full p-2 border rounded"
                                 />
-                                {errores.name && <p className="text-red-500 text-sm">{errores.name}</p>}
+                                {errores.name && (
+                                    <p className="text-red-500 text-sm">{errores.name}</p>
+                                )}
                             </div>
                             <div className="mb-3">
-                                <label className="block text-sm font-medium text-gray-700">Correo:</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Correo:
+                                </label>
                                 <input
                                     type="email"
                                     name="email"
@@ -244,11 +243,14 @@ export default function Empleados() {
                                     onChange={handleInputChange}
                                     className="mt-1 w-full p-2 border rounded"
                                 />
-                                {errores.email && <p className="text-red-500 text-sm">{errores.email}</p>}
+                                {errores.email && (
+                                    <p className="text-red-500 text-sm">{errores.email}</p>
+                                )}
                             </div>
                             <div className="mb-3">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Contraseña: {modoEdicion && <small>(Déjalo vacío para no cambiarla)</small>}
+                                    Contraseña:{" "}
+                                    {modoEdicion && <small>(Déjalo vacío para no cambiarla)</small>}
                                 </label>
                                 <input
                                     type="password"
@@ -257,7 +259,9 @@ export default function Empleados() {
                                     onChange={handleInputChange}
                                     className="mt-1 w-full p-2 border rounded"
                                 />
-                                {errores.password && <p className="text-red-500 text-sm">{errores.password}</p>}
+                                {errores.password && (
+                                    <p className="text-red-500 text-sm">{errores.password}</p>
+                                )}
                             </div>
                             <div className="flex justify-end gap-2 mt-4">
                                 <button

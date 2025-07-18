@@ -102,10 +102,10 @@ export default function Inventario() {
             ? `http://127.0.0.1:8000/api/P-update/${formulario.id}`
             : "http://127.0.0.1:8000/api/P-store";
 
-        const method = "POST"; // Siempre POST, Laravel interpretará el método
+        const method = "POST";
 
         if (modoEdicion) {
-            formData.append("_method", "PUT"); // Laravel reconocerá como PUT
+            formData.append("_method", "PUT");
         }
 
         try {
