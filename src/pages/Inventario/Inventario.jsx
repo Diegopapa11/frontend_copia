@@ -23,6 +23,7 @@ export default function Inventario() {
             setError("No hay empresa almacenada. Por favor inicia sesión.");
             return;
         }
+
         const empresaObj = JSON.parse(empresaStr);
         if (!empresaObj.token) {
             setError("Token no encontrado. Por favor inicia sesión.");
@@ -36,9 +37,13 @@ export default function Inventario() {
         });
 
         setFormulario((prev) => ({ ...prev, id_empresa: empresaObj.id }));
-
-        fetchProductos(empresaObj.id, empresaObj.token);
     }, []);
+
+    useEffect(() => {
+        if (empresa.id && empresa.token) {
+            fetchProductos(empresa.id, empresa.token);
+        }
+    }, [empresa]);
 
     const fetchProductos = async (idEmpresa, token) => {
         try {
@@ -47,7 +52,6 @@ export default function Inventario() {
                     Authorization: `Bearer ${token}`,
                 },
             });
-
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Error al obtener inventario");
 
@@ -89,6 +93,7 @@ export default function Inventario() {
         formData.append("stock", formulario.stock);
         formData.append("description", formulario.description);
         formData.append("id_empresa", formulario.id_empresa);
+
         if (formulario.image) {
             formData.append("image", formulario.image);
         }
@@ -97,7 +102,11 @@ export default function Inventario() {
             ? `http://127.0.0.1:8000/api/P-update/${formulario.id}`
             : "http://127.0.0.1:8000/api/P-store";
 
-        const method = modoEdicion ? "POST" : "POST";
+        const method = "POST"; // Siempre POST, Laravel interpretará el método
+
+        if (modoEdicion) {
+            formData.append("_method", "PUT"); // Laravel reconocerá como PUT
+        }
 
         try {
             const response = await fetch(url, {
@@ -131,17 +140,16 @@ export default function Inventario() {
                 image: null,
                 id_empresa: empresa.id,
             });
+
             setErrores({});
             setMostrarModal(false);
-
+            setModoEdicion(false);
             fetchProductos(empresa.id, empresa.token);
         } catch (err) {
             console.error("Error:", err);
             alert("Ocurrió un error al enviar el formulario.");
         }
     };
-    console.log(empresa.token); // Debe verse algo como "55|abc123..."
-
 
     const handleEliminar = async (id) => {
         if (!window.confirm("¿Estás seguro de eliminar este producto?")) return;
@@ -213,8 +221,8 @@ export default function Inventario() {
                     <table className="w-full table-auto border-collapse">
                         <thead>
                             <tr className="bg-blue-100 text-left text-sm uppercase text-gray-600">
-                                <th className="p-3">ID</th>
                                 <th className="p-3">Nombre</th>
+                                <th className="p-3">Imagen</th>
                                 <th className="p-3">Precio</th>
                                 <th className="p-3">Cantidad</th>
                                 <th className="p-3">Acciones</th>
@@ -226,8 +234,19 @@ export default function Inventario() {
                                     key={producto.id}
                                     className="border-b hover:bg-gray-50 text-gray-700"
                                 >
-                                    <td className="p-3">{producto.id}</td>
                                     <td className="p-3">{producto.name}</td>
+                                    <td className="p-3">
+                                        {producto.image ? (
+                                            <img
+                                                src={`http://127.0.0.1:8000/api/P-imagen/${producto.image}`}
+                                                alt={producto.name}
+                                                className="w-16 h-16 object-cover rounded"
+                                            />
+                                        ) : (
+                                            <span className="text-gray-400 italic">Sin imagen</span>
+                                        )}
+                                    </td>
+
                                     <td className="p-3">${producto.price}</td>
                                     <td className="p-3">{producto.stock}</td>
                                     <td className="p-3 space-x-2">
@@ -251,7 +270,6 @@ export default function Inventario() {
                 )}
             </div>
 
-            {/* Modal para agregar/editar producto */}
             {mostrarModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
@@ -317,7 +335,6 @@ export default function Inventario() {
                                 {errores.image && <p className="text-red-500 text-sm">{errores.image}</p>}
                             </div>
 
-                            {/* Campo oculto para id_empresa */}
                             <input type="hidden" name="id_empresa" value={formulario.id_empresa} />
 
                             <div className="flex justify-end gap-2 mt-4">
