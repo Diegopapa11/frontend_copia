@@ -25,10 +25,10 @@ export default function LoginEmpleado() {
             }
 
             // Guardar datos en localStorage
-            localStorage.setItem("empleado", JSON.stringify(data.user)); // <--- CORRECTO
+            localStorage.setItem("empleado", JSON.stringify(data.user));
             localStorage.setItem("token", data.token); // si usas token
 
-            navigate("/ventas");
+            navigate("/list");
 
         } catch (err) {
             setError(err.message);

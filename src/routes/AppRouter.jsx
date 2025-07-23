@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginEmpresa from '../pages/LoginEmpresa';
 import Register from '../pages/Register';
-import DashboardEmpresa from '../pages/DashboardEmpresa';
+import DashboardEmpresa from '../pages/ListadoProductos';
 import Home from '../pages/Home';
 import Inventario from '../pages/Inventario/Inventario';
 import Reportes from '../pages/Reportes';
@@ -11,6 +11,7 @@ import Ventas from '../pages/Ventas/Ventas';
 import AccesoVentas from '../pages/Ventas/AccesoVentas';
 import LoginEmpleado from '../pages/LoginEmpleado';
 import { useEmpresa } from '../context/EmpresaContext';
+import ListadoProductos from '../pages/ListadoProductos';
 
 export default function AppRouter() {
     const { empresa } = useEmpresa();
@@ -28,8 +29,8 @@ export default function AppRouter() {
                 <Route path="/" element={<LoginEmpresa />} />
                 <Route path='/register' element={<Register />} />
                 <Route
-                    path="/dashboard"
-                    element={empresa ? <DashboardEmpresa /> : <Navigate to="/" />}
+                    path="/list"
+                    element={empresa ? <ListadoProductos /> : <Navigate to="/" />}
                 />
             </Routes>
         </>

@@ -173,7 +173,6 @@ export default function Clientes() {
                                 <th className="p-3">ID</th>
                                 <th className="p-3">Nombre</th>
                                 <th className="p-3">Email</th>
-                                <th className="p-3">Compras</th>
                                 <th className="p-3">Antigüedad</th>
                                 <th className="p-3">Acciones</th>
                             </tr>
@@ -184,8 +183,7 @@ export default function Clientes() {
                                     <td className="p-3">{c.id}</td>
                                     <td className="p-3">{c.name}</td>
                                     <td className="p-3">{c.email}</td>
-                                    <td className="p-3">${c.compras}</td>
-                                    <td className="p-3">{c.antiguedad} años</td>
+                                    <td className="p-3">{c.antiguedad}</td>
                                     <td className="p-3 space-x-2">
                                         <button
                                             onClick={() => handleEditar(c)}

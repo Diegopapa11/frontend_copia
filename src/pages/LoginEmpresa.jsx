@@ -14,7 +14,7 @@ export default function LoginEmpresa() {
         const empresa = await loginEmpresa(nombre, password);
         if (empresa) {
             setEmpresa(empresa);
-            navigate('/dashboard');
+            navigate('/login-empleado');
         } else {
             alert('Credenciales incorrectas');
         }
