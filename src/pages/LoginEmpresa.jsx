@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginEmpresa } from '../services/authservice';
+import { loginEmpresa } from '../services/authService';
 import { useEmpresa } from '../context/EmpresaContext';
 
 export default function LoginEmpresa() {
