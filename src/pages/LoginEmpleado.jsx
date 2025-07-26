@@ -5,36 +5,43 @@ export default function LoginEmpleado() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
+    const navigate = useNavigate();    // ...existing code...
+    // ...existing code...
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
 
-        try {
-            const response = await fetch("http://localhost:8000/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
+    try {
+        const res = await fetch('http://localhost:8000/api/login-empleado', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
 
-            const data = await response.json();
+        const data = await res.json();
+        console.log('Respuesta backend:', data);
 
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || "Credenciales incorrectas");
-            }
-
-            // Guardar datos en localStorage
-            localStorage.setItem("empleado", JSON.stringify(data.user));
-            localStorage.setItem("token", data.token); // si usas token
-
-            navigate("/list");
-
-        } catch (err) {
-            setError(err.message);
+        if (!res.ok) {
+            setError(data.message || 'Error al iniciar sesión');
+            return;
         }
-    };
 
+        // Login exitoso..
+
+        // Guardar datos en localStorage
+        localStorage.setItem("empleado", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+
+        navigate("/list");
+    } catch (err) {
+        setError(err.message);
+    }
+};
+    
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
             <form

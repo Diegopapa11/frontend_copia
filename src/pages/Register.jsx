@@ -25,11 +25,14 @@ export default function Register() {
         setError(null);
 
         try {
-            const res = await fetch('http://localhost:8000/api/register-empresa', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
-            });
+           const res = await fetch('http://localhost:8000/api/register-empresa', {
+               method: 'POST',
+               headers: {
+                   'Content-Type': 'application/json',
+                   'Accept': 'application/json', // 👈 AGREGA ESTO
+               },
+               body: JSON.stringify(form),
+           });
 
             if (!res.ok) {
                 const errData = await res.json();
@@ -37,7 +40,7 @@ export default function Register() {
             }
 
             alert('Registro exitoso, por favor inicia sesión');
-            navigate('/login');
+            navigate('/login-empleado');
         } catch (err) {
             setError(err.message);
         }
